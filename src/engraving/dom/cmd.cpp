@@ -612,7 +612,11 @@ void Score::cmdAddSpanner(Spanner* spanner, staff_idx_t staffIdx, Segment* start
     for (auto ss : spanner->spannerSegments()) {
         ss->setTrack(track);
     }
-    spanner->setTick(startSegment->tick());
+
+    bool isMeasureAnchor = spanner->anchor() == Spanner::Anchor::MEASURE;
+    Fraction tick1 = isMeasureAnchor ? startSegment->measure()->tick() : startSegment->tick();
+    spanner->setTick(tick1);
+
     Fraction tick2;
     if (!endSegment) {
         tick2 = lastSegment()->tick();
@@ -621,6 +625,13 @@ void Score::cmdAddSpanner(Spanner* spanner, staff_idx_t staffIdx, Segment* start
     } else {
         tick2 = endSegment->tick();
     }
+    if (isMeasureAnchor) {
+        Measure* endMeasure = tick2measureMM(tick2);
+        if (endMeasure->tick() != tick2) {
+            tick2 = endMeasure->endTick();
+        }
+    }
+
     spanner->setTick2(tick2);
     undoAddElement(spanner, true, ctrlModifier);
 }
@@ -1421,6 +1432,7 @@ Fraction Score::makeGap(Segment* segment, track_idx_t track, const Fraction& _sd
         // chord symbols can exist without chord/rest so they should not be removed
         constexpr Sel filter = static_cast<Sel>(int(Sel::ALL) & ~int(Sel::CHORD_SYMBOL));
         deleteAnnotationsFromRange(s1, s2, track, track + 1, filter);
+        deleteSlursFromRange(t1, t2, track, track + 1, filter);
     }
 
     return accumulated;

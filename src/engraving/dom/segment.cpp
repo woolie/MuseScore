@@ -1624,15 +1624,15 @@ EngravingItem* Segment::firstAnnotation(staff_idx_t activeStaff) const
 
 EngravingItem* Segment::lastAnnotation(staff_idx_t activeStaff) const
 {
-    for (auto i = --m_annotations.end(); i != m_annotations.begin(); --i) {
+    for (auto i = m_annotations.rbegin(); i != m_annotations.rend(); ++i) {
         // TODO: firstVisibleStaff() for system elements? see Spanner::nextSpanner()
-        if ((*i)->staffIdx() == activeStaff) {
-            return *i;
+        EngravingItem* e = *i;
+        IF_ASSERT_FAILED(e) {
+            continue;
         }
-    }
-    auto i = m_annotations.begin();
-    if ((*i)->staffIdx() == activeStaff) {
-        return *i;
+        if (e->staffIdx() == activeStaff) {
+            return e;
+        }
     }
     return nullptr;
 }
@@ -1682,16 +1682,17 @@ EngravingItem* Segment::firstElementOfSegment(staff_idx_t activeStaff) const
 {
     for (auto i: m_elist) {
         if (i && i->staffIdx() == activeStaff) {
+            if (i->isDurationElement()) {
+                DurationElement* de = toDurationElement(i);
+                Tuplet* tuplet = de->tuplet();
+                if (tuplet && de == tuplet->elements().front()) {
+                    return tuplet;
+                }
+            }
+
             if (i->type() == ElementType::CHORD) {
                 Chord* chord = toChord(i);
-                GraceNotesGroup& graceNotesBefore = chord->graceNotesBefore();
-                if (!graceNotesBefore.empty()) {
-                    if (Chord* graceNotesBeforeFirstChord = graceNotesBefore.front()) {
-                        return graceNotesBeforeFirstChord->notes().front();
-                    }
-                }
-
-                return toChord(i)->notes().back();
+                return chord->firstGraceOrNote();
             } else {
                 return i;
             }
@@ -1974,7 +1975,8 @@ EngravingItem* Segment::nextElement(staff_idx_t activeStaff)
     case ElementType::STAFF_STATE:
     case ElementType::INSTRUMENT_CHANGE:
     case ElementType::HARP_DIAGRAM:
-    case ElementType::STICKING: {
+    case ElementType::STICKING:
+    case ElementType::TUPLET: {
         EngravingItem* next = nullptr;
         if (e->explicitParent() == this) {
             next = nextAnnotation(e);
@@ -2057,7 +2059,15 @@ EngravingItem* Segment::nextElement(staff_idx_t activeStaff)
         if (s) {
             return s->spannerSegments().front();
         }
-        Segment* nextSegment =  seg->next1MMenabled();
+        Segment* nextSegment = seg->next1MMenabled();
+        for (; nextSegment && nextSegment->isTimeTickType(); nextSegment = nextSegment->next1MMenabled()) {
+            if (EngravingItem* annotation = nextSegment->firstAnnotation(activeStaff)) {
+                return annotation;
+            }
+            if (Spanner* spanner = nextSegment->firstSpanner(activeStaff)) {
+                return spanner->spannerSegments().front();
+            }
+        }
         if (!nextSegment) {
             MeasureBase* mb = measure()->next();
             return mb && mb->isBox() ? mb : score()->lastElement();
@@ -2225,6 +2235,14 @@ EngravingItem* Segment::prevElement(staff_idx_t activeStaff)
             }
         }
         Segment* prevSeg = seg->prev1MMenabled();
+        for (; prevSeg && prevSeg->isTimeTickType(); prevSeg = prevSeg->prev1MMenabled()) {
+            if (Spanner* spanner = prevSeg->lastSpanner(activeStaff)) {
+                return spanner->spannerSegments().front();
+            }
+            if (EngravingItem* annotation = prevSeg->lastAnnotation(activeStaff)) {
+                return annotation;
+            }
+        }
         if (!prevSeg) {
             MeasureBase* mb = measure()->prev();
             return mb && mb->isBox() ? mb : score()->firstElement();
