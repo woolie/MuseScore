@@ -483,7 +483,11 @@ uint64_t PlaybackController::notationPlaybackKey() const
 
 void PlaybackController::onNotationChanged()
 {
-    m_masterNotation = globalContext()->currentMasterNotation();
+    if (globalContext()->currentMasterNotation() != m_masterNotation) {
+        m_masterNotation = globalContext()->currentMasterNotation();
+        notifyActionCheckedChanged(LOOP_CODE);
+    }
+
     setNotation(globalContext()->currentNotation());
 
     DEFER {
@@ -1330,6 +1334,9 @@ void PlaybackController::updateSoloMuteStates()
     bool hasSolo = false;
 
     for (const InstrumentTrackId& instrumentTrackId : existingTrackIdSet) {
+        if (instrumentTrackId == notationPlayback()->metronomeTrackId()) {
+            continue;
+        }
         if (m_notation->soloMuteState()->trackSoloMuteState(instrumentTrackId).solo) {
             hasSolo = true;
             break;
@@ -1567,7 +1574,7 @@ void PlaybackController::setNotation(notation::INotationPtr notation)
     });
 
     m_notation->interaction()->textEditingEnded().onReceive(this, [this](engraving::TextBase* text) {
-        if (text->isHarmony()) {
+        if (text && text->isHarmony()) {
             playElements({ text });
         }
     });

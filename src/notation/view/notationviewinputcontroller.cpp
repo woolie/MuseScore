@@ -645,6 +645,7 @@ void NotationViewInputController::mousePressEvent(QMouseEvent* event)
         if (numHitElements > 1 && (keyState & Qt::ControlModifier)) {
             size_t currTop = numHitElements - 1;
             EngravingItem* e = hitElements[currTop];
+            std::set<EngravingItem*> selectedAtPosition;
             bool found = false;
 
             // e is the topmost element in stacking order,
@@ -658,13 +659,17 @@ void NotationViewInputController::mousePressEvent(QMouseEvent* event)
                     }
                 } else if (hitElements[currTop]->selected()) {
                     found = true;
+                    selectedAtPosition.emplace(hitElements[currTop]);
                     e = nullptr;
                 }
                 currTop = (currTop + 1) % numHitElements;
             }
 
             if (e && !e->selected()) {
-                viewInteraction()->select({ e }, SelectType::SINGLE, hitStaffIndex);
+                for (EngravingItem* selectedElem : selectedAtPosition) {
+                    selectedElem->score()->deselect(selectedElem);
+                }
+                viewInteraction()->select({ e }, SelectType::ADD, hitStaffIndex);
             }
         } else {
             viewInteraction()->select({ hitElement }, selectType, hitStaffIndex);
@@ -719,7 +724,7 @@ void NotationViewInputController::handleLeftClick(const ClickContext& ctx)
 
     bool hitElementIsAlreadyBeingEdited = viewInteraction()->isElementEditStarted() && viewInteraction()->editedItem() == ctx.hitElement;
     if (!selection->isRange() && ctx.hitElement && ctx.hitElement->needStartEditingAfterSelecting() && !hitElementIsAlreadyBeingEdited) {
-        if (ctx.hitElement->hasGrips()) {
+        if (ctx.hitElement->hasGrips() && selection->elements().size() == 1) {
             viewInteraction()->startEditGrip(ctx.hitElement, ctx.hitElement->gripsCount() > 4 ? Grip::DRAG : Grip::MIDDLE);
         } else {
             viewInteraction()->startEditElement(ctx.hitElement, false);

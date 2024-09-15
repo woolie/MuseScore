@@ -1570,7 +1570,7 @@ bool NotationInteraction::doDropStandard()
 //! NOTE: Helper method for NotationInteraction::drop. Handles drop logic for text base items & symbols (returns "accepted")
 bool NotationInteraction::doDropTextBaseAndSymbols(const PointF& pos, bool applyUserOffset)
 {
-    EngravingItem* el = elementAt(pos);
+    EngravingItem* el = m_dropData.dropTarget ? m_dropData.dropTarget : elementAt(pos);
     if (el == 0 || el->type() == ElementType::STAFF_LINES) {
         mu::engraving::staff_idx_t staffIdx;
         mu::engraving::Segment* seg;
@@ -1597,6 +1597,7 @@ bool NotationInteraction::doDropTextBaseAndSymbols(const PointF& pos, bool apply
             LOGD("drop %s onto %s not accepted", m_dropData.ed.dropElement->typeName(), el->typeName());
             return false;
         }
+        m_dropData.ed.pos = pos;
         EngravingItem* dropElement = el->drop(m_dropData.ed);
         score()->addRefresh(el->canvasBoundingRect());
         if (dropElement) {
@@ -1735,7 +1736,7 @@ bool NotationInteraction::applyPaletteElement(mu::engraving::EngravingItem* elem
             spanner->styleChanged();
             if (spanner->isHairpin()) {
                 score->addHairpin(toHairpin(spanner), cr1, cr2);
-                if (!spanner->segmentsEmpty()) {
+                if (!spanner->segmentsEmpty() && !score->noteEntryMode()) {
                     SpannerSegment* frontSegment = spanner->frontSegment();
                     score->select(frontSegment);
                     startEditElement(frontSegment);
@@ -2282,17 +2283,18 @@ bool NotationInteraction::dropCanvas(EngravingItem* e)
 EngravingItem* NotationInteraction::dropTarget(mu::engraving::EditData& ed) const
 {
     std::vector<EngravingItem*> el = elementsAt(ed.pos);
+    mu::engraving::Measure* fallbackMeasure = nullptr;
     for (EngravingItem* e : el) {
         if (e->isStaffLines()) {
-            if (el.size() > 2) {          // is not first class drop target
-                continue;
-            }
-            e = mu::engraving::toStaffLines(e)->measure();
+            fallbackMeasure = mu::engraving::toStaffLines(e)->measure();
+            continue;
         }
-
         if (e->acceptDrop(ed)) {
             return e;
         }
+    }
+    if (fallbackMeasure && fallbackMeasure->acceptDrop(ed)) {
+        return fallbackMeasure;
     }
     return nullptr;
 }
@@ -2440,7 +2442,7 @@ bool NotationInteraction::dragTimeAnchorElement(const PointF& pos)
 }
 
 //! NOTE Copied from ScoreView::setDropTarget
-void NotationInteraction::setDropTarget(const EngravingItem* item, bool notify)
+void NotationInteraction::setDropTarget(EngravingItem* item, bool notify)
 {
     if (m_dropData.dropTarget != item) {
         if (m_dropData.dropTarget) {
@@ -3298,20 +3300,18 @@ bool NotationInteraction::handleKeyPress(QKeyEvent* event)
 
 void NotationInteraction::endEditText()
 {
-    EngravingItem** element = &m_editData.element;
-    IF_ASSERT_FAILED(*element) {
-        return;
-    }
-
     if (!isTextEditingStarted()) {
         return;
     }
 
-    doEndEditElement();
+    doEndEditElement(false /*clearEditData*/);
 
-    if (*element) {
-        notifyAboutTextEditingEnded(toTextBase(*element));
+    if (m_editData.element) {
+        notifyAboutTextEditingEnded(toTextBase(m_editData.element));
     }
+
+    m_editData.clear();
+
     notifyAboutTextEditingChanged();
     notifyAboutSelectionChangedIfNeed();
 }
@@ -3665,12 +3665,15 @@ const EngravingItem* NotationInteraction::editedItem() const
     return m_editData.element;
 }
 
-void NotationInteraction::doEndEditElement()
+void NotationInteraction::doEndEditElement(bool clearEditData)
 {
     if (m_editData.element) {
         m_editData.element->endEdit(m_editData);
     }
-    m_editData.clear();
+
+    if (clearEditData) {
+        m_editData.clear();
+    }
 }
 
 void NotationInteraction::onElementDestroyed(EngravingItem* element)

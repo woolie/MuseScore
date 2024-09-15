@@ -601,7 +601,6 @@ void PaletteProvider::init()
 
     m_searchFilterModel = new PaletteCellFilterProxyModel(this);
     m_searchFilterModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
-    m_searchFilterModel->setSourceModel(m_masterPaletteModel);
 
     m_visibilityFilterModel = new QSortFilterProxyModel(this);
     m_visibilityFilterModel->setFilterRole(PaletteTreeModel::VisibleRole);
@@ -615,6 +614,21 @@ void PaletteProvider::init()
     configuration()->isSingleClickToOpenPalette().ch.onReceive(this, [this](bool) {
         emit isSingleClickToOpenPaletteChanged();
     });
+}
+
+void PaletteProvider::setFilter(const QString& filter)
+{
+    // Unbind the model when there is no search text so as to return no results
+    // and thus speed up the opening of the palette search. Rebind the model
+    // as soon as the search text is non-empty.
+    // Doing this *trick* also when the search text is non-empty helps
+    // speed up the search in certain other scenarios,
+    // e.g. when deleting search characters (going from fewer to more search results).
+    m_searchFilterModel->setSourceModel(nullptr);
+    m_searchFilterModel->setFilterFixedString(filter);
+    if (!filter.isEmpty()) {
+        m_searchFilterModel->setSourceModel(m_masterPaletteModel);
+    }
 }
 
 void PaletteProvider::setSearching(bool searching)
