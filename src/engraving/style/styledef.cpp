@@ -1293,6 +1293,7 @@ const std::array<StyleDef::StyleValue, size_t(Sid::STYLES)> StyleDef::styleValue
     styleDef(glissandoText,                              String(u"gliss.")),
     styleDef(glissandoStyle,                             GlissandoStyle::CHROMATIC),
     styleDef(glissandoStyleHarp,                         GlissandoStyle::DIATONIC),
+    styleDef(glissandoType,                              GlissandoType::STRAIGHT),
     styleDef(glissandoLineStyle,                         PropertyValue(LineType::SOLID)),
     styleDef(glissandoDashLineLen,                       5.0),
     styleDef(glissandoDashGapLen,                        5.0),
