@@ -230,6 +230,7 @@ void AbstractNotationPaintView::onLoadNotation(INotationPtr)
 {
     if (viewport().isValid() && !m_notation->viewState()->isMatrixInited()) {
         m_inputController->initZoom();
+        m_inputController->initCanvasPos();
     }
 
     if (publishMode()) {
@@ -380,6 +381,7 @@ void AbstractNotationPaintView::onViewSizeChanged()
     if (viewport().isValid()) {
         if (!notation()->viewState()->isMatrixInited()) {
             m_inputController->initZoom();
+            m_inputController->initCanvasPos();
         } else {
             m_inputController->updateZoomAfterSizeChange();
         }
@@ -1487,7 +1489,7 @@ void AbstractNotationPaintView::setPlaybackCursorItem(QQuickItem* cursor)
     m_playbackCursorItem = cursor;
 
     if (m_playbackCursorItem) {
-        m_playbackCursorItem->setVisible(false);
+        m_playbackCursorItem->setVisible(playbackController()->isPlaying());
         m_playbackCursorItem->setEnabled(false); // ignore mouse & keyboard events
         m_playbackCursorItem->setProperty("color", configuration()->playbackCursorColor());
 

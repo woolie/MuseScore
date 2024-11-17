@@ -22,8 +22,7 @@
 #ifndef MU_APPSHELL_APPMENUMODEL_H
 #define MU_APPSHELL_APPMENUMODEL_H
 
-Q_MOC_INCLUDE(< QWindow >)
-
+#include "context/iglobalcontext.h"
 #include "uicomponents/view/abstractmenumodel.h"
 
 #include "modularity/ioc.h"
@@ -60,6 +59,7 @@ public:
     muse::Inject<muse::update::IUpdateConfiguration> updateConfiguration = { this };
     muse::Inject<muse::IGlobalConfiguration> globalConfiguration = { this };
     muse::Inject<project::IProjectConfiguration> projectConfiguration = { this };
+    muse::Inject<mu::context::IGlobalContext> globalContext = { this };
 
 public:
     explicit AppMenuModel(QObject* parent = nullptr);
@@ -81,8 +81,8 @@ private:
     muse::uicomponents::MenuItem* makeToolsMenu();
     muse::uicomponents::MenuItem* makePluginsMenu();
     muse::uicomponents::MenuItemList makePluginsMenuSubitems();
-    muse::uicomponents::MenuItem* makeHelpMenu();
-    muse::uicomponents::MenuItem* makeDiagnosticMenu();
+    muse::uicomponents::MenuItem* makeHelpMenu(bool addDiagnosticsSubMenu);
+    muse::uicomponents::MenuItem* makeDiagnosticsMenu();
 
     muse::uicomponents::MenuItemList makeRecentScoresItems();
     muse::uicomponents::MenuItemList appendClearRecentSection(const muse::uicomponents::MenuItemList& recentScores);
@@ -98,6 +98,9 @@ private:
     muse::uicomponents::MenuItemList makeWorkspacesItems();
     muse::uicomponents::MenuItemList makeShowItems();
     muse::uicomponents::MenuItemList makePluginsItems();
+
+    mu::notation::INotationUndoStackPtr undoStack() const;
+    void updateUndoRedoItems();
 };
 }
 

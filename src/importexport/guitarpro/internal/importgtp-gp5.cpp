@@ -923,7 +923,7 @@ bool GuitarPro5::read(IODevice* io)
         }
         if (barBits & SCORE_REPEAT_END) {                    // number of repeats
             bar.repeatFlags = bar.repeatFlags | mu::engraving::Repeat::END;
-            bar.repeats = readUInt8();
+            bar.repeats = readUInt8() + 1;
         }
         if (barBits & SCORE_MARKER) {
             bar.marker = readDelphiString();           // new section?
@@ -1137,7 +1137,6 @@ GuitarPro::ReadNoteResult GuitarPro5::readNoteEffects(Note* note)
         int grace_pitch = note->staff()->part()->instrument()->stringData()->getPitch(note->string(), fret, nullptr);
 
         auto gnote = score->setGraceNote(note->chord(), grace_pitch, note_type, grace_len);
-        score->deselect(gnote);
 
         // gp5 not supports more than one grace note,
         // so it's always should be shown as eight note

@@ -340,6 +340,7 @@ public:
     void cmdRemovePart(Part*);
     void cmdAddTie(bool addToChord = false);
     void cmdToggleTie();
+    void cmdToggleLaissezVib();
     static std::vector<Note*> cmdTieNoteList(const Selection& selection, bool noteEntryMode);
     void cmdAddOttava(OttavaType);
     std::vector<Hairpin*> addHairpins(HairpinType);
@@ -382,7 +383,7 @@ public:
     void cmdMoveRest(Rest*, DirectionV);
     void cmdMoveLyrics(Lyrics*, DirectionV);
 
-    void realtimeAdvance();
+    void realtimeAdvance(bool allowTransposition);
 
     void addRemoveBreaks(int interval, bool lock);
 
@@ -497,9 +498,9 @@ public:
     bool containsElement(const EngravingItem*) const;
 
     Note* addPitch(NoteVal&, bool addFlag, InputState* externalInputState = nullptr);
-    Note* addTiedMidiPitch(int pitch, bool addFlag, Chord* prevChord);
-    NoteVal noteVal(int pitch) const;
-    Note* addMidiPitch(int pitch, bool addFlag);
+    Note* addTiedMidiPitch(int pitch, bool addFlag, Chord* prevChord, bool allowTransposition);
+    NoteVal noteVal(int pitch, bool allowTransposition) const;
+    Note* addMidiPitch(int pitch, bool addFlag, bool allowTransposition);
     Note* addNote(Chord*, const NoteVal& noteVal, bool forceAccidental = false, const std::set<SymId>& articulationIds = {},
                   InputState* externalInputState = nullptr);
     Note* addNoteToTiedChord(Chord*, const NoteVal& noteVal, bool forceAccidental = false, const std::set<SymId>& articulationIds = {});
@@ -524,7 +525,7 @@ public:
     muse::Ret repitchNote(const Position& pos, bool replace);
     void regroupNotesAndRests(const Fraction& startTick, const Fraction& endTick, track_idx_t track);
 
-    void startCmd();                    // start undoable command
+    void startCmd(const TranslatableString& actionName);             // start undoable command
     void endCmd(bool rollback = false, bool layoutAllParts = false); // end undoable command
     void update() { update(true); }
     void lockUpdates(bool locked);

@@ -41,6 +41,7 @@
 #include "engraving/dom/harmony.h"
 #include "engraving/dom/jump.h"
 #include "engraving/dom/keysig.h"
+#include "engraving/dom/laissezvib.h"
 #include "engraving/dom/lyrics.h"
 #include "engraving/dom/marker.h"
 #include "engraving/dom/measure.h"
@@ -818,9 +819,6 @@ bool MeiExporter::writeMeasure(const Measure* measure, int& measureN, bool& isFi
             success = success && this->writeHairpin(dynamic_cast<const Hairpin*>(controlEvent.first), controlEvent.second);
         } else if (controlEvent.first->isHarmony()) {
             success = success && this->writeHarm(dynamic_cast<const Harmony*>(controlEvent.first), controlEvent.second);
-        } else if (controlEvent.first->isArticulation() && !controlEvent.first->isOrnament()) {
-            // laissez vibrer is the only non-ornamental articulation we find in the list, see MeiExporter::writeArtics
-            success = success && this->writeLv(dynamic_cast<const Articulation*>(controlEvent.first), controlEvent.second);
         } else if (controlEvent.first->isOrnament()) {
             success = success && this->writeOrnament(dynamic_cast<const Ornament*>(controlEvent.first), controlEvent.second);
         } else if (controlEvent.first->isOttava()) {
@@ -972,7 +970,6 @@ bool MeiExporter::writeArtics(const Chord* chord)
 
     for (const Articulation* articulation : chord->articulations()) {
         if (articulation->isArticulation() && !this->isLaissezVibrer(articulation->symId())) {
-            // laissez vibrer is handled as control element
             this->writeArtic(articulation);
         }
     }
@@ -1183,7 +1180,7 @@ bool MeiExporter::writeChord(const Chord* chord, const Staff* staff)
             meiChord.SetDots(chord->dots());
         }
         this->writeBeamTypeAtt(chord, meiChord);
-        this->writeStaffIdenAtt(chord, staff, meiChord);
+        this->writeStaffIdentAtt(chord, staff, meiChord);
         this->writeStemAtt(chord, meiChord);
         this->writeArtics(chord);
         this->writeVerses(chord);
@@ -1273,7 +1270,7 @@ bool MeiExporter::writeNote(const Note* note, const Chord* chord, const Staff* s
             meiNote.SetDots(chord->dots());
         }
         this->writeBeamTypeAtt(chord, meiNote);
-        this->writeStaffIdenAtt(chord, staff, meiNote);
+        this->writeStaffIdentAtt(chord, staff, meiNote);
         this->writeStemAtt(chord, meiNote);
         this->writeArtics(chord);
         this->writeVerses(chord);
@@ -1341,9 +1338,11 @@ bool MeiExporter::writeRest(const Rest* rest, const Staff* staff)
         if (rest->dots()) {
             meiRest.SetDots(rest->dots());
         }
-        Convert::colorToMEI(rest, meiRest);
+        if (rest->visible()) {
+            Convert::colorToMEI(rest, meiRest);
+        }
         this->writeBeamTypeAtt(rest, meiRest);
-        this->writeStaffIdenAtt(rest, staff, meiRest);
+        this->writeStaffIdentAtt(rest, staff, meiRest);
         // this->writeVerses(rest);
         const char prefix = (rest->visible()) ? 'r' : 's';
         std::string xmlId = this->getXmlIdFor(rest, prefix);
@@ -1766,24 +1765,6 @@ bool MeiExporter::writeHarm(const Harmony* harmony, const std::string& startid)
 }
 
 /**
- * Write a lv.
- */
-
-bool MeiExporter::writeLv(const Articulation* articulation, const std::string& startid)
-{
-    IF_ASSERT_FAILED(articulation) {
-        return false;
-    }
-
-    pugi::xml_node lvNode = m_currentNode.append_child();
-    libmei::Lv meiLv = Convert::lvToMEI(articulation);
-    meiLv.SetStartid(startid);
-    meiLv.Write(lvNode, this->getXmlIdFor(articulation, 'l'));
-
-    return true;
-}
-
-/**
  * Write a octave (ottava).
  */
 
@@ -2006,7 +1987,12 @@ bool MeiExporter::writeTie(const Tie* tie, const std::string& startid)
     libmei::Tie meiTie = Convert::tieToMEI(tie);
     meiTie.SetStartid(startid);
 
-    meiTie.Write(tieNode, this->getXmlIdFor(tie, 't'));
+    meiTie.Write(tieNode, this->getXmlIdFor(tie, tie->isLaissezVib() ? 'l' : 't'));
+
+    // Change open ties by simply adjusting the element name
+    if (tie->isLaissezVib()) {
+        tieNode.set_name("lv");
+    }
 
     // Add the node to the map of open control events
     this->addNodeToOpenControlEvents(tieNode, tie, startid);
@@ -2053,7 +2039,7 @@ bool MeiExporter::writeBeamTypeAtt(const ChordRest* chordRest, libmei::AttTyped&
  * Write the cross-staff attribute (@staff) for a ChordRest (i.e., chord, note, rest or space).
  */
 
-bool MeiExporter::writeStaffIdenAtt(const ChordRest* chordRest, const Staff* staff, libmei::AttStaffIdent& staffIdentAtt)
+bool MeiExporter::writeStaffIdentAtt(const ChordRest* chordRest, const Staff* staff, libmei::AttStaffIdent& staffIdentAtt)
 {
     if (chordRest->staffMove() != 0) {
         staff_idx_t staffN = staff->idx() + chordRest->staffMove() + 1;

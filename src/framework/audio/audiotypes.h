@@ -28,9 +28,10 @@
 #include <string>
 
 #include "global/types/number.h"
+#include "global/types/secs.h"
 #include "global/types/ratio.h"
-#include "global/realfn.h"
 #include "global/types/string.h"
+#include "global/realfn.h"
 #include "global/async/channel.h"
 #include "global/io/iodevice.h"
 
@@ -38,7 +39,7 @@
 
 namespace muse::audio {
 using msecs_t = int64_t;
-using secs_t = number_t<double>;
+using secs_t = muse::secs_t;
 
 inline secs_t milisecsToSecs(msecs_t ms) { return secs_t(ms / 1000.0); }
 inline secs_t microsecsToSecs(msecs_t us) { return secs_t(us / 1000000.0); }
@@ -347,22 +348,23 @@ using AudioSignalChanges = async::Channel<AudioSignalValuesMap>;
 
 static constexpr volume_dbfs_t MINIMUM_OPERABLE_DBFS_LEVEL = volume_dbfs_t::make(-100.f);
 struct AudioSignalsNotifier {
-    void updateSignalValues(const audioch_t audioChNumber, const float newAmplitude, const volume_dbfs_t newPressure)
+    void updateSignalValues(const audioch_t audioChNumber, const float newAmplitude)
     {
+        volume_dbfs_t newPressure = (newAmplitude > 0.f) ? volume_dbfs_t(muse::linear_to_db(newAmplitude)) : MINIMUM_OPERABLE_DBFS_LEVEL;
+        newPressure = std::max(newPressure, MINIMUM_OPERABLE_DBFS_LEVEL);
+
         AudioSignalVal& signalVal = m_signalValuesMap[audioChNumber];
 
-        volume_dbfs_t validatedPressure = std::max(newPressure, MINIMUM_OPERABLE_DBFS_LEVEL);
-
-        if (RealIsEqual(signalVal.pressure, validatedPressure)) {
+        if (muse::is_equal(signalVal.pressure, newPressure)) {
             return;
         }
 
-        if (std::abs(signalVal.pressure - validatedPressure) < PRESSURE_MINIMAL_VALUABLE_DIFF) {
+        if (std::abs(signalVal.pressure - newPressure) < PRESSURE_MINIMAL_VALUABLE_DIFF) {
             return;
         }
 
         signalVal.amplitude = newAmplitude;
-        signalVal.pressure = validatedPressure;
+        signalVal.pressure = newPressure;
 
         m_needNotifyAboutChanges = true;
     }

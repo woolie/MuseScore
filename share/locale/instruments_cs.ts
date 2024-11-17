@@ -11444,28 +11444,28 @@
         <source>Congas.</source>
         <comment>congas description</comment>
         <extracomment>description for Congas; Please see https://github.com/musescore/MuseScore/wiki/Translating-instrument-names</extracomment>
-        <translation>Konga.</translation>
+        <translation>Conga.</translation>
     </message>
     <message>
         <location filename="../instruments/instrumentsxml.h" line="3859"/>
         <source>Congas</source>
         <comment>congas trackName</comment>
         <extracomment>trackName for Congas; Please see https://github.com/musescore/MuseScore/wiki/Translating-instrument-names</extracomment>
-        <translation>Konga</translation>
+        <translation>Conga</translation>
     </message>
     <message>
         <location filename="../instruments/instrumentsxml.h" line="3861"/>
         <source>Congas</source>
         <comment>congas longName</comment>
         <extracomment>longName for Congas; Please see https://github.com/musescore/MuseScore/wiki/Translating-instrument-names</extracomment>
-        <translation>Konga</translation>
+        <translation>Conga</translation>
     </message>
     <message>
         <location filename="../instruments/instrumentsxml.h" line="3863"/>
         <source>Con.</source>
         <comment>congas shortName</comment>
         <extracomment>shortName for Congas; Please see https://github.com/musescore/MuseScore/wiki/Translating-instrument-names</extracomment>
-        <translation>Kon.</translation>
+        <translation>Con.</translation>
     </message>
     <message>
         <location filename="../instruments/instrumentsxml.h" line="3866"/>
@@ -13327,7 +13327,7 @@
         <source>Contr.</source>
         <comment>contralto shortName</comment>
         <extracomment>shortName for Contralto; Please see https://github.com/musescore/MuseScore/wiki/Translating-instrument-names</extracomment>
-        <translation>Ka.</translation>
+        <translation>Kontr.</translation>
     </message>
     <message>
         <location filename="../instruments/instrumentsxml.h" line="4496"/>
@@ -14181,14 +14181,14 @@
         <source>Percussion Synthesizer</source>
         <comment>percussion-synthesizer trackName</comment>
         <extracomment>trackName for Percussion Synthesizer; Please see https://github.com/musescore/MuseScore/wiki/Translating-instrument-names</extracomment>
-        <translation>Perkusivní syntezátor</translation>
+        <translation>Perkusní syntezátor</translation>
     </message>
     <message>
         <location filename="../instruments/instrumentsxml.h" line="4775"/>
         <source>Percussion Synthesizer</source>
         <comment>percussion-synthesizer longName</comment>
         <extracomment>longName for Percussion Synthesizer; Please see https://github.com/musescore/MuseScore/wiki/Translating-instrument-names</extracomment>
-        <translation>Perkusivní syntezátor</translation>
+        <translation>Perkusní syntezátor</translation>
     </message>
     <message>
         <location filename="../instruments/instrumentsxml.h" line="4777"/>
@@ -15406,7 +15406,7 @@
         <source>B. Vl.</source>
         <comment>viola-da-gamba shortName</comment>
         <extracomment>shortName for Bass Viol; Please see https://github.com/musescore/MuseScore/wiki/Translating-instrument-names</extracomment>
-        <translation>B. Vl.</translation>
+        <translation>B. vl.</translation>
     </message>
     <message>
         <location filename="../instruments/instrumentsxml.h" line="6160"/>
@@ -15434,7 +15434,7 @@
         <source>B. Vl.</source>
         <comment>viola-da-gamba-tablature shortName</comment>
         <extracomment>shortName for Bass Viol (tablature); Please see https://github.com/musescore/MuseScore/wiki/Translating-instrument-names</extracomment>
-        <translation>B. Vl.</translation>
+        <translation>B. vl.</translation>
     </message>
     <message>
         <location filename="../instruments/instrumentsxml.h" line="6169"/>
@@ -19322,7 +19322,7 @@
     <message>
         <location filename="../instruments/instrumentsxml.h" line="157"/>
         <source>Pitched Metal Percussion</source>
-        <translation>Laděné kovové bicí nástroje</translation>
+        <translation>Laděné kovové perkuse</translation>
     </message>
     <message>
         <location filename="../instruments/instrumentsxml.h" line="158"/>
@@ -19382,7 +19382,7 @@
     <message>
         <location filename="../instruments/instrumentsxml.h" line="169"/>
         <source>Body Percussion</source>
-        <translation>Bicí nástroje – lidské tělo</translation>
+        <translation>Lidské tělo</translation>
     </message>
     <message>
         <location filename="../instruments/instrumentsxml.h" line="170"/>
@@ -19608,22 +19608,22 @@
     <message>
         <location filename="../instruments/instrumentsxml.h" line="3410"/>
         <source>Percussion - Pitched</source>
-        <translation>Bicí nástroje – laděné</translation>
+        <translation>Bicí nástroje laděné</translation>
     </message>
     <message>
         <location filename="../instruments/instrumentsxml.h" line="3800"/>
         <source>Percussion - Unpitched</source>
-        <translation>Bicí nástroje – neladěné</translation>
+        <translation>Bicí nástroje neladěné</translation>
     </message>
     <message>
         <location filename="../instruments/instrumentsxml.h" line="4334"/>
         <source>Percussion - Marching</source>
-        <translation>Bicí nástroje – pochodové</translation>
+        <translation>Bicí nástroje pochodové</translation>
     </message>
     <message>
         <location filename="../instruments/instrumentsxml.h" line="4373"/>
         <source>Percussion - Body</source>
-        <translation>Bicí nástroje – lidské tělo</translation>
+        <translation>Lidské tělo</translation>
     </message>
     <message>
         <location filename="../instruments/instrumentsxml.h" line="4412"/>

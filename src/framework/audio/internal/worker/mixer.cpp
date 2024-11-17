@@ -38,7 +38,7 @@ Mixer::Mixer(const modularity::ContextPtr& iocCtx)
 {
     ONLY_AUDIO_WORKER_THREAD;
 
-    m_taskScheduler = std::make_unique<TaskScheduler>(configuration()->desiredAudioThreadNumber());
+    m_taskScheduler = std::make_unique<TaskScheduler>(static_cast<thread_pool_size_t>(configuration()->desiredAudioThreadNumber()));
 
     if (!m_taskScheduler->setThreadsPriority(ThreadPriority::High)) {
         LOGE() << "Unable to change audio threads priority";
@@ -553,7 +553,7 @@ void Mixer::completeOutput(float* buffer, samples_t samplesPerChannel)
         }
 
         float rms = dsp::samplesRootMeanSquare(singleChannelSquaredSum, samplesPerChannel);
-        m_audioSignalNotifier.updateSignalValues(audioChNum, rms, muse::linear_to_db(rms));
+        m_audioSignalNotifier.updateSignalValues(audioChNum, rms);
     }
 
     m_audioSignalNotifier.notifyAboutChanges();
@@ -569,7 +569,7 @@ void Mixer::completeOutput(float* buffer, samples_t samplesPerChannel)
 void Mixer::notifyNoAudioSignal()
 {
     for (audioch_t audioChNum = 0; audioChNum < m_audioChannelsCount; ++audioChNum) {
-        m_audioSignalNotifier.updateSignalValues(audioChNum, 0.f, MINIMUM_OPERABLE_DBFS_LEVEL);
+        m_audioSignalNotifier.updateSignalValues(audioChNum, 0.f);
     }
 
     m_audioSignalNotifier.notifyAboutChanges();
